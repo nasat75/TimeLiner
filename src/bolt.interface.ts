@@ -8,8 +8,14 @@ export interface MessageEventParam {
 }
 
 export interface MiddlewareParam {
-  next: NextFn;
+  next?: NextFn;
   client?: WebClient;
   message?: MessageEvent;
   context?: Context;
+}
+
+export interface SendMessageParam {
+  client: WebClient;
+  context: Context;
+  message: MessageEvent;
 }

@@ -1,7 +1,7 @@
 import { App } from "@slack/bolt";
 import { MiddlewareParam } from "./bolt.interface";
 
-export const notBotMessages: any = async ({
+export const notBotMessages: (args: MiddlewareParam) => Promise<void> = async ({
   message,
   next,
 }: MiddlewareParam) => {
@@ -11,10 +11,9 @@ export const notBotMessages: any = async ({
   if (!isExistSubtype && !isExistBotID && !message.hidden) await next();
 };
 
-export const noThreadMessages: any = async ({
-  message,
-  next,
-}: MiddlewareParam) => {
+export const noThreadMessages: (
+  args: MiddlewareParam
+) => Promise<void> = async ({ message, next }: MiddlewareParam) => {
   if (!message.thread_ts) await next();
 };
 
@@ -23,7 +22,7 @@ export const noThreadMessages: any = async ({
 //   if (!message.thread_ts) await next();
 // };
 
-export const getTeamInfo: any = async ({
+export const getTeamInfo: (args: MiddlewareParam) => Promise<void> = async ({
   client,
   context,
   next,
@@ -42,7 +41,9 @@ export const getTeamInfo: any = async ({
 };
 
 // To add posted user's profile to context
-export const addUsersInfoContext: any = async ({
+export const addUsersInfoContext: (
+  args: MiddlewareParam
+) => Promise<void> = async ({
   client,
   message,
   context,
@@ -67,7 +68,7 @@ export const addUsersInfoContext: any = async ({
   await next();
 };
 
-export const getFileInfo: any = async ({
+export const getFileInfo: (args: MiddlewareParam) => Promise<void> = async ({
   context,
   next,
   message,
@@ -95,7 +96,7 @@ export const getFileInfo: any = async ({
   await next();
 };
 
-export const getChannelInfo: any = async ({
+export const getChannelInfo: (args: MiddlewareParam) => Promise<void> = async ({
   client,
   message,
   context,
@@ -114,9 +115,18 @@ export const getChannelInfo: any = async ({
   await next();
 };
 
-export const enableAll: any = async (app: App): Promise<void> => {
+export const enableAll = async (app: App) => {
   if (process.env.SLACK_REQUEST_LOG_ENABLED === "1") {
     app.use(async (args) => {
+      await Promise.all([
+        getTeamInfo(args),
+        getFileInfo(args),
+        addUsersInfoContext(args),
+        notBotMessages(args),
+        noThreadMessages(args),
+        getChannelInfo(args),
+      ]);
+      console.log("finished enable all");
       const copiedArgs = JSON.parse(JSON.stringify(args));
       // console.log({copiedArgs})
       copiedArgs.context.botToken = "xoxb-***";
